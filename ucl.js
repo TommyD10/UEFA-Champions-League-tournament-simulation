@@ -1,0 +1,190 @@
+const { groupStage, groupObject } = require('./api.js')
+groupStage()
+
+const simulateChampionsLeague = () => {
+    var totalTeams = Object.keys(groupObject).length // Total number of Teams in the Group 
+    var gamePlan = [[1,2], [3,4], [1,3], [2,4], [1,4], [2,3], [2,1], [4,3], [3,1], [4,2], [4,1], [3,2]] // Gropu matches schedule
+    var charCode = "A".charCodeAt(0);
+    
+    for (let i=charCode; i < (charCode + (totalTeams / 4)); i++){
+
+        let group = String.fromCharCode(i)
+
+        for ( let j=0; j < gamePlan.length; j++ ) {
+            
+            var t1 = group+gamePlan[j][0]
+            var t2 = group+gamePlan[j][1]
+
+            //Get teams from the Object
+            var team1 = groupObject[t1]
+            var team2 = groupObject[t2]
+
+            // Randomize the score
+            var goalsTeam1 = Math.round(Math.random() * 3)
+            var goalsTeam2 = Math.round(Math.random() * 3)
+
+            team1.goalsScored += goalsTeam1
+            team1.goalsRecieved += goalsTeam2
+            team2.goalsScored += goalsTeam2
+            team2.goalsRecieved += goalsTeam1
+
+            let resultDiff = goalsTeam1 - goalsTeam2
+
+            
+            // Points logic
+            if( resultDiff > 0 ) {
+                team1.points += 3
+            } else if( resultDiff < 0) {
+                team2.points += 3
+            } else {
+                team1.points += 1
+                team2.points += 1
+            }
+            
+            
+            console.log(`Group Match: ${team1.name} vs. ${team2.name} ${goalsTeam1}:${goalsTeam2}`)
+           
+            
+        }
+    } 
+        var groupTable = []
+        var knockOutStageTeams = []
+        
+        for (let j=charCode; j < (charCode + (totalTeams / 4)); j++){
+
+            var group1 = String.fromCharCode(j)
+
+            for(let i=0; i < 4; i++ ) {
+
+                var t1 = group1 +(i+1)
+                var team = groupObject[t1]
+                
+                groupTable.push([team.name, team.points, team.goalsScored, team.goalsRecieved, team.goalDifference = team.goalsScored - team.goalsRecieved])
+            }
+
+            groupTable.sort(function(a,b){
+                if(a[1] === b[1] ) {
+                    return a[5] - b[5]
+                }
+                return b[1] - a[1]
+            })
+            
+            
+            
+            knockOutStageTeams = knockOutStageTeams.concat(groupTable.slice(0,2))
+            console.log('Group Stage Final Table:', groupTable)
+            groupTable = []
+        }
+
+        var best16 = []
+        for(let i = 0; i < knockOutStageTeams.length; i++){
+            best16.push({name: knockOutStageTeams[i].slice(0,1).toString(), totalGoals: 0, guestGoals:0})
+            
+        }
+        
+        console.log(best16)
+
+    var best8 = []
+    var best4 = []
+    var best2 = []
+    //Schedule for the knockOut phase    
+    var knockOut16 = [[0,3], [3,0], [4,7], [7,4], [8,11], [11,8], [12,15], [15,12], [2,1], [1,2], [6,5], [5,6], [10,9],[9,10], [14,13],[13,14]] 
+    var knockOut8  = [[0,1], [1,0], [2,3], [3,2],[4,5], [5,4], [6,7], [7,6]] 
+    var semiFinal  = [[0,1], [1,0], [2,3], [3,2]]
+    var final      = [[0,1]]    
+    var winner     = ''
+    
+    //KnockOut function for all stages
+    const knockOutFunc = (teamsQual, schedule, teamsWinerArr=[], stage ) =>{
+        
+        var pot1=[]; 
+        var pot2=[];
+        
+        for(let i = 0; i <schedule.length; i++){
+            let t1 = schedule[i][0]
+            let t2 = schedule[i][1]
+
+            let team1 = teamsQual[t1]
+            let team2 = teamsQual[t2]
+
+
+            var goalsTeam1 = Math.round(Math.random() * 3)
+            var goalsTeam2 = Math.round(Math.random() * 3)
+
+            team1.totalGoals += goalsTeam1
+            team2.totalGoals += goalsTeam2
+            team2.guestGoals += goalsTeam2
+
+            console.log(`${stage}: ${team1.name} vs. ${team2.name} ${goalsTeam1}:${goalsTeam2}`)
+
+            pot1.push(team1)
+            pot2.push(team2)
+
+
+            // The final match condition because is the only match thah the teams plays just once
+            if(stage === 'Final-Match'){
+                if(goalsTeam1 > goalsTeam2){
+                    console.log(`The Winner is ${team1.name}`)
+                } else if (goalsTeam2 > goalsTeam1){
+                    console.log(`The Winner is ${team2.name}`)
+                }else{
+                    if ( Math.random() > .5 ){
+                        console.log(`The winner is ${team1.name} after penalty`)
+                    } else {
+                        console.log(`The winner is ${team2.name} after penalty`)
+
+                    }
+                }
+                
+                
+            }
+            
+        }
+        
+        
+        for(let j = 0; j<pot1.length -1; j += 2){
+            
+                var score1 = pot1[j]
+                var score2 = pot2[j]
+                // goal diffence
+                 if( score1.totalGoals > score2.totalGoals ){
+                     teamsWinerArr.push(pot1[j])
+                 } else if(score1.totalGoals < score2.totalGoals){
+                     teamsWinerArr.push(pot2[j])
+                 } else { // guest goal difference
+                    // console.log('guest goals!!!')
+                    if( score1.guestGoals > score2.guestGoals ){
+                        teamsWinerArr.push(pot1[j])
+                    } else if (score1.guestGoals < score2.guestGoals) {
+                        teamsWinerArr.push(pot2[j])
+                    } else { // penalty
+                        // console.log('penalty!!!',score1.totalGoals,score2.totalGoals,score1.guestGoals,score2.guestGoals)
+                        if ( Math.random() > .5 ){
+                            teamsWinerArr.push(pot1[j])
+                        } else {
+                            teamsWinerArr.push(pot2[j])
+                        }
+                    }
+                 }
+        }
+        
+       
+      
+        return teamsWinerArr
+    }
+
+    knockOutFunc(best16, knockOut16, best8, 'Best of 16')
+    knockOutFunc(best8, knockOut8, best4, 'Quater-Final')
+    knockOutFunc(best4, semiFinal, best2, 'Semi-Final')
+    knockOutFunc(best2, final, winner, 'Final-Match' )
+  
+    
+}
+simulateChampionsLeague()
+
+
+
+
+
+
+
